@@ -8,7 +8,6 @@ import dev.emi.trinkets.api.TrinketComponent;
 import dev.emi.trinkets.api.TrinketInventory;
 import dev.emi.trinkets.api.TrinketsApi;
 import eu.pb4.sgui.api.gui.SimpleGui;
-import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.minecraft.command.argument.GameProfileArgumentType;
 import net.minecraft.inventory.EnderChestInventory;
 import net.minecraft.nbt.NbtCompound;
@@ -22,38 +21,45 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
 import net.minecraft.world.dimension.DimensionType;
 import us.potatoboy.invview.gui.SavingPlayerDataGui;
-import us.potatoboy.invview.gui.UnmodifiableSlot;
 
 import java.util.Map;
 
 public class ViewCommand {
-    private static MinecraftServer minecraftServer = InvView.getMinecraftServer();
 
-    private static final String permProtected = "invview.protected";
-    private static final String permModify = "invview.can_modify";
+    private static final MinecraftServer minecraftServer = InvView.getMinecraftServer();
     private static final String msgProtected = "Requested inventory is protected";
 
     public static int inv(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
         ServerPlayerEntity player = context.getSource().getPlayer();
         ServerPlayerEntity requestedPlayer = getRequestedPlayer(context);
 
-        boolean canModify = Permissions.check(context.getSource(), permModify, true);
+        if (player == null) {
+            return 1;
+        }
 
-        Permissions.check(requestedPlayer.getUuid(), permProtected, false).thenAcceptAsync(isProtected -> {
-            if (isProtected) {
-                context.getSource().sendError(Text.literal(msgProtected));
-            } else {
-                SimpleGui gui = new SavingPlayerDataGui(ScreenHandlerType.GENERIC_9X5, player, requestedPlayer);
-                gui.setTitle(requestedPlayer.getName());
-                for (int i = 0; i < requestedPlayer.getInventory().size(); i++) {
-                    gui.setSlotRedirect(i, canModify ? new Slot(requestedPlayer.getInventory(), i, 0, 0) : new UnmodifiableSlot(requestedPlayer.getInventory(), i));
-                }
-
-                gui.open();
+        if (player.hasPermissionLevel(4)) {
+            SimpleGui gui = new SavingPlayerDataGui(ScreenHandlerType.GENERIC_9X5, player, requestedPlayer);
+            gui.setTitle(requestedPlayer.getName());
+            for (int i = 0; i < requestedPlayer.getInventory().size(); i++) {
+                gui.setSlotRedirect(i, new Slot(requestedPlayer.getInventory(), i, 0, 0));
             }
-        });
+
+            gui.open();
+        } else {
+            context.getSource().sendError(Text.literal(msgProtected));
+        }
 
         return 1;
+    }
+
+    public static void inv(ServerPlayerEntity player, ServerPlayerEntity playerToView) {
+        SimpleGui gui = new SavingPlayerDataGui(ScreenHandlerType.GENERIC_9X5, player, playerToView);
+        gui.setTitle(playerToView.getName());
+        for (int i = 0; i < playerToView.getInventory().size(); i++) {
+            gui.setSlotRedirect(i, new Slot(playerToView.getInventory(), i, 0, 0));
+        }
+
+        gui.open();
     }
 
     public static int eChest(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
@@ -61,30 +67,29 @@ public class ViewCommand {
         ServerPlayerEntity requestedPlayer = getRequestedPlayer(context);
         EnderChestInventory requestedEchest = requestedPlayer.getEnderChestInventory();
 
-        boolean canModify = Permissions.check(context.getSource(), permModify, true);
+        if (player == null) {
+            return 1;
+        }
 
-        Permissions.check(requestedPlayer.getUuid(), permProtected, false).thenAcceptAsync(isProtected -> {
-            if (isProtected) {
-                context.getSource().sendError(Text.literal(msgProtected));
-            } else {
-				ScreenHandlerType<?> screenHandlerType = switch (requestedEchest.size()) {
-					case 9 -> ScreenHandlerType.GENERIC_9X1;
-					case 18  -> ScreenHandlerType.GENERIC_9X2;
-					case 36  -> ScreenHandlerType.GENERIC_9X4;
-					case 45  -> ScreenHandlerType.GENERIC_9X5;
-					case 54  -> ScreenHandlerType.GENERIC_9X6;
-					default -> ScreenHandlerType.GENERIC_9X3;
-				};
-                SimpleGui gui = new SavingPlayerDataGui(screenHandlerType, player, requestedPlayer);
-                gui.setTitle(requestedPlayer.getName());
-                for (int i = 0; i < requestedEchest.size(); i++) {
-                    gui.setSlotRedirect(i, canModify ? new Slot(requestedEchest, i, 0, 0) : new UnmodifiableSlot(requestedEchest, i));
-                }
-
-                gui.open();
+        if (player.hasPermissionLevel(4)) {
+            ScreenHandlerType<?> screenHandlerType = switch (requestedEchest.size()) {
+                case 9 -> ScreenHandlerType.GENERIC_9X1;
+                case 18 -> ScreenHandlerType.GENERIC_9X2;
+                case 36 -> ScreenHandlerType.GENERIC_9X4;
+                case 45 -> ScreenHandlerType.GENERIC_9X5;
+                case 54 -> ScreenHandlerType.GENERIC_9X6;
+                default -> ScreenHandlerType.GENERIC_9X3;
+            };
+            SimpleGui gui = new SavingPlayerDataGui(screenHandlerType, player, requestedPlayer);
+            gui.setTitle(requestedPlayer.getName());
+            for (int i = 0; i < requestedEchest.size(); i++) {
+                gui.setSlotRedirect(i, new Slot(requestedEchest, i, 0, 0));
             }
-        });
 
+            gui.open();
+        } else {
+            context.getSource().sendError(Text.literal(msgProtected));
+        }
         return 1;
     }
 
@@ -93,28 +98,27 @@ public class ViewCommand {
         ServerPlayerEntity requestedPlayer = getRequestedPlayer(context);
         TrinketComponent requestedComponent = TrinketsApi.getTrinketComponent(requestedPlayer).get();
 
-        boolean canModify = Permissions.check(context.getSource(), permModify, true);
+        if (player == null) {
+            return 1;
+        }
 
-        Permissions.check(requestedPlayer.getUuid(), permProtected, false).thenAcceptAsync(isProtected -> {
-            if (isProtected) {
-                context.getSource().sendError(Text.literal(msgProtected));
-            } else {
-                SimpleGui gui = new SavingPlayerDataGui(ScreenHandlerType.GENERIC_9X2, player, requestedPlayer);
-                gui.setTitle(requestedPlayer.getName());
-                int index = 0;
-                for (Map<String, TrinketInventory> group : requestedComponent.getInventory().values()) {
-                    for (TrinketInventory inventory : group.values()) {
-                        for (int i = 0; i < inventory.size(); i++) {
-                            gui.setSlotRedirect(index, canModify ? new Slot(inventory, i, 0, 0) : new UnmodifiableSlot(inventory, i));
-                            index += 1;
-                        }
+        if (player.hasPermissionLevel(4)) {
+            SimpleGui gui = new SavingPlayerDataGui(ScreenHandlerType.GENERIC_9X2, player, requestedPlayer);
+            gui.setTitle(requestedPlayer.getName());
+            int index = 0;
+            for (Map<String, TrinketInventory> group : requestedComponent.getInventory().values()) {
+                for (TrinketInventory inventory : group.values()) {
+                    for (int i = 0; i < inventory.size(); i++) {
+                        gui.setSlotRedirect(index, new Slot(inventory, i, 0, 0));
+                        index += 1;
                     }
                 }
-
-                gui.open();
             }
-        });
 
+            gui.open();
+        } else {
+            context.getSource().sendError(Text.literal(msgProtected));
+        }
         return 1;
     }
 

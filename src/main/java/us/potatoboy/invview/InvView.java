@@ -1,7 +1,6 @@
 package us.potatoboy.invview;
 
 import com.mojang.brigadier.tree.LiteralCommandNode;
-import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
@@ -27,6 +26,7 @@ public class InvView implements ModInitializer {
 
     @Override
     public void onInitialize() {
+        ServerListener.register();
         isTrinkets = FabricLoader.getInstance().isModLoaded("trinkets");
         isLuckPerms = FabricLoader.getInstance().isModLoaded("luckperms");
         isOrigins = FabricLoader.getInstance().isModLoaded("origins");
@@ -35,33 +35,33 @@ public class InvView implements ModInitializer {
 
             LiteralCommandNode<ServerCommandSource> viewNode = CommandManager
                     .literal("view")
-                    .requires(Permissions.require("invview.command.root", 2))
+                    .requires(source -> source.hasPermissionLevel(4))
                     .build();
 
             LiteralCommandNode<ServerCommandSource> invNode = CommandManager
                     .literal("inv")
-                    .requires(Permissions.require("invview.command.inv", 2))
+                    .requires(source -> source.hasPermissionLevel(4))
                     .then(CommandManager.argument("target", GameProfileArgumentType.gameProfile())
                             .executes(ViewCommand::inv))
                     .build();
 
             LiteralCommandNode<ServerCommandSource> echestNode = CommandManager
                     .literal("echest")
-                    .requires(Permissions.require("invview.command.echest", 2))
+                    .requires(source -> source.hasPermissionLevel(4))
                     .then(CommandManager.argument("target", GameProfileArgumentType.gameProfile())
                             .executes(ViewCommand::eChest))
                     .build();
 
             LiteralCommandNode<ServerCommandSource> trinketNode = CommandManager
                     .literal("trinket")
-                    .requires(Permissions.require("invview.command.trinket", 2))
+                    .requires(source -> source.hasPermissionLevel(4))
                     .then(CommandManager.argument("target", GameProfileArgumentType.gameProfile())
                             .executes(ViewCommand::trinkets))
                     .build();
 
             LiteralCommandNode<ServerCommandSource> originNode = CommandManager
                     .literal("origin-inv")
-                    .requires(Permissions.require("invview.command.origin", 2))
+                    .requires(source -> source.hasPermissionLevel(4))
                     .then(CommandManager.argument("target", GameProfileArgumentType.gameProfile())
                             .executes(ViewCommand::origin))
                     .build();
