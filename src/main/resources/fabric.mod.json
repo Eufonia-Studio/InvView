@@ -28,6 +28,9 @@
       "us.potatoboy.invview.InvView"
     ]
   },
+  "mixins": [
+    "invview.mixins.json"
+  ],
   "depends": {
     "fabricloader": ">=0.7.2",
     "fabric": "*",

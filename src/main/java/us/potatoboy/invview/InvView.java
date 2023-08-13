@@ -52,13 +52,6 @@ public class InvView implements ModInitializer {
                             .executes(ViewCommand::eChest))
                     .build();
 
-            LiteralCommandNode<ServerCommandSource> trinketNode = CommandManager
-                    .literal("trinket")
-                    .requires(source -> source.hasPermissionLevel(4))
-                    .then(CommandManager.argument("target", GameProfileArgumentType.gameProfile())
-                            .executes(ViewCommand::trinkets))
-                    .build();
-
             LiteralCommandNode<ServerCommandSource> originNode = CommandManager
                     .literal("origin-inv")
                     .requires(source -> source.hasPermissionLevel(4))
@@ -70,9 +63,6 @@ public class InvView implements ModInitializer {
             viewNode.addChild(invNode);
             viewNode.addChild(echestNode);
 
-            if (isTrinkets) {
-                viewNode.addChild(trinketNode);
-            }
             if (isOrigins) {
                 //viewNode.addChild(originNode);
             }

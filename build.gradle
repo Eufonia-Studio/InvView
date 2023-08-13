@@ -42,7 +42,6 @@ dependencies {
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
     modImplementation include("eu.pb4:sgui:${project.sgui_version}")
-    modImplementation "dev.emi:trinkets:${project.trinkets_version}"
 }
 
 processResources {
